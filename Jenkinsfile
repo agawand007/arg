@@ -42,11 +42,16 @@ pipeline {
                 script {
                     echo '========== Stage: Build =========='
                     echo "Building Docker image: ${DOCKER_IMAGE}"
-                    sh '''
-                        docker build -t ${DOCKER_IMAGE} .
-                        echo "✓ Docker image built successfully"
-                        docker images | grep ${IMAGE_NAME}
-                    '''
+                    try {
+                        sh '''
+                            docker build -t ${DOCKER_IMAGE} .
+                            echo "✓ Docker image built successfully"
+                            docker images | grep ${IMAGE_NAME}
+                        '''
+                    } catch (Exception e) {
+                        echo "Docker build failed: ${e.message}"
+                        error("Build stage failed")
+                    }
                 }
             }
         }
@@ -56,10 +61,15 @@ pipeline {
                 script {
                     echo '========== Stage: Push =========='
                     echo "Pushing Docker image to registry: ${DOCKER_REGISTRY}"
-                    sh '''
-                        docker push ${DOCKER_IMAGE}
-                        echo "✓ Docker image pushed successfully to ${DOCKER_REGISTRY}"
-                    '''
+                    try {
+                        sh '''
+                            docker push ${DOCKER_IMAGE}
+                            echo "✓ Docker image pushed successfully to ${DOCKER_REGISTRY}"
+                        '''
+                    } catch (Exception e) {
+                        echo "Docker push failed: ${e.message}"
+                        error("Push stage failed")
+                    }
                 }
             }
         }
